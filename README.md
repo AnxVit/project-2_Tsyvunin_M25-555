@@ -46,3 +46,6 @@
 <command> exit - выход из программы
 
 <command> help - справочная информация 
+
+## Пример работы игры
+[![asciicast](https://asciinema.org/a/rC3YXxTXHGskdHaiyXYzRt399)](https://asciinema.org/a/rC3YXxTXHGskdHaiyXYzRt399)
