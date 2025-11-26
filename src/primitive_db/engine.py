@@ -10,6 +10,7 @@ import src.primitive_db.utils as u
 
 
 def run():
+    '''The main cycle of processing and running commands'''
     print_help()
 
     while True:
@@ -67,11 +68,33 @@ def run():
             print(f"Неожиданная ошибка при обработке команд: {e}")
 
 def enter_command():
-    comand = prompt.string('Введите команду: ')
+    '''
+    Entering the user's command
+    Parameters
+    ----------
+    None
+
+    Returns
+    -------
+    str
+        user's command
+    '''
+    command = prompt.string('Введите команду: ')
     print()
-    return comand
+    return command
 
 def print_tables(tables):
+    '''
+    Print name of tables
+    Parameters
+    ----------
+    tables: list[str]
+        tables name
+
+    Returns
+    -------
+    None
+    '''
     if not tables:
         print("Нет таблиц")
         return

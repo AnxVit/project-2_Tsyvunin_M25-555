@@ -4,6 +4,22 @@ import src.primitive_db.constant as const
 
 
 def create_table(metadata, table_name, columns):
+    '''
+    Create table
+    Parameters
+    ----------
+    metadata: dict
+        info about existing tables
+    table_name: string
+        table name
+    colums: list[str]
+        table columns in format (name:type)
+
+    Returns
+    -------
+    dict
+        updating metadata
+    '''
     if not isinstance(metadata, dict):
         raise TypeError("Неверный тип метаданных")
     
@@ -44,6 +60,20 @@ def create_table(metadata, table_name, columns):
         
 
 def drop_table(metadata, table_name):
+    '''
+    Drop existing table
+    Parameters
+    ----------
+    metadata: dict
+        info about existing tables
+    table_name: string
+        table name
+
+    Returns
+    -------
+    dict
+        updating metadata
+    '''
     if not isinstance(metadata, dict):
         raise TypeError("Неверный тип метаданных")
     
@@ -58,6 +88,18 @@ def drop_table(metadata, table_name):
     return metadata
 
 def list_tables(metadata):
+    '''
+    Create table
+    Parameters
+    ----------
+    metadata: dict
+        info about existing tables
+
+    Returns
+    -------
+    list[str]
+        tables name
+    '''
     if not isinstance(metadata, dict):
         raise TypeError("Неверный тип метаданных")
     
