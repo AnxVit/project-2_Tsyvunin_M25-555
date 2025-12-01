@@ -2,6 +2,7 @@ install:
 	poetry install
  
 database:
+	mkdir -p data
 	poetry run database
 
 build:
