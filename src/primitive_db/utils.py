@@ -44,6 +44,20 @@ def save_metadata(filepath, data):
         json.dump(data, file)
 
 def load_table_data(table_name):
+    '''
+    Load data table from file
+    Parameters
+    ----------
+    table_name: string
+        table name
+
+    Returns
+    -------
+    list
+        rowa table
+    bool
+        is exist table
+    '''
     try:
         path = const.DATA_DIR + table_name + const.EXTENSION_TABLE
         with open(path, 'r', encoding='utf-8') as file:
@@ -53,12 +67,25 @@ def load_table_data(table_name):
         return [], False
 
 def save_table_data(table_name, data):
+    '''
+    Save data table to file
+    Parameters
+    ----------
+    table_name: string
+        table name
+    data: list[dict]
+        rows table        
+    Returns
+    -------
+    None
+    '''
     path = const.DATA_DIR + table_name + const.EXTENSION_TABLE
     full_data = {table_name: data}
     with open(path, 'w', encoding='utf-8') as file:
         json.dump(full_data, file)
 
 def validate_commands(args):
+    """Validation of user commands"""
     command = args[0]
     match command:
         case const.COMMAND_CREATE:

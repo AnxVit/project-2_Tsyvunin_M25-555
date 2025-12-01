@@ -111,6 +111,22 @@ def list_tables(metadata):
     return list(metadata.keys())
 
 def insert(metadata, table_name, values):
+    '''
+    Insert values to the table
+    Parameters
+    ----------
+    metadata: dict
+        info about existing tables
+    table_name: string
+        table name
+    values: list
+        inserted values according to the columns of the table 
+
+    Returns
+    -------
+    int
+        next value of id
+    '''
     if not isinstance(metadata, dict):
         raise TypeError("Неверный тип метаданных")
     
@@ -154,7 +170,21 @@ def insert(metadata, table_name, values):
     u.save_table_data(table_name, data)
     return max_id
 
-def select(table_data, where_clause=None):    
+def select(table_data, where_clause=None):
+    '''
+    Select values to the table
+    Parameters
+    ----------
+    table_data: list[dict]
+        rows of table: name: value
+    where_clause: dict
+        selection condition
+
+    Returns
+    -------
+    list[dict]
+        selected rows
+    ''' 
     if where_clause is None:
         return table_data
     
@@ -170,6 +200,24 @@ def select(table_data, where_clause=None):
     return res
 
 def update(table_data, set_clause, where_clause):
+    '''
+    Update values in the table by condition
+    Parameters
+    ----------
+    table_data: list[dict]
+        rows of table: name: value
+    set_clause: dict
+        replacement paramenter
+    where_clause: dict
+        selection condition
+
+    Returns
+    -------
+    list[dict], 
+        updated rows
+    list[int]
+        ids of table
+    ''' 
     if not isinstance(where_clause, dict):
         raise ValueError("Неверный тип условия")
     if not isinstance(set_clause, dict):
@@ -189,6 +237,23 @@ def update(table_data, set_clause, where_clause):
     return postprocess_data, res
 
 def delete(table_data, where_clause):
+    '''
+    Delete values from the table by condition
+    Parameters
+    ----------
+    table_data: list[dict]
+        rows of table: name: value
+
+    where_clause: dict
+        selection condition
+
+    Returns
+    -------
+    list[dict], 
+        updated rows
+    list[int]
+        ids of table
+    ''' 
     if not isinstance(where_clause, dict):
         raise ValueError("Неверный тип условия")
     
@@ -204,6 +269,20 @@ def delete(table_data, where_clause):
     return postprocess_data, res
 
 def get_clause(clause):
+    '''
+    Get clause items from dict
+    Parameters
+    ----------
+    clause: dict
+        column_name;value
+
+    Returns
+    -------
+    string
+        column name
+    any
+        value
+    ''' 
     column = list(clause.keys())[0]
     value = clause[column]
     if column.upper() == const.ID_COLUMN:

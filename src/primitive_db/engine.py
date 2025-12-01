@@ -134,6 +134,20 @@ def print_tables(tables):
     print()
 
 def print_table_rows(metadata, table_name, rows):
+    '''
+    Print rows of table
+    Parameters
+    ----------
+    metadata: dict
+        info about existing tables
+    table_name: string
+        table name
+    rows: list[dict]
+        rows of table
+    Returns
+    -------
+    None
+    '''
     table = PrettyTable()
 
     table.field_names = [column.split(":", 1)[0] for column in metadata[table_name]]
@@ -142,6 +156,18 @@ def print_table_rows(metadata, table_name, rows):
     print(table)
 
 def print_info(metadata, table_name):
+    '''
+    Print info about table
+    Parameters
+    ----------
+    metadata: dict
+        info about existing tables
+    table_name: string
+        table name
+    Returns
+    -------
+    None
+    '''
     print(f"Таблица: {table_name}")
     print(f"Столбцы: {', '.join(metadata[table_name])}")
     data, ok = u.load_table_data(table_name)
