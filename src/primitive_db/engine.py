@@ -144,8 +144,10 @@ def print_table_rows(metadata, table_name, rows):
 def print_info(metadata, table_name):
     print(f"Таблица: {table_name}")
     print(f"Столбцы: {', '.join(metadata[table_name])}")
-    size = len(u.load_table_data(table_name))
-    print(f"Количество записей: {size}")
+    data, ok = u.load_table_data(table_name)
+    if not ok:
+        raise FileNotFoundError("Такой таблицы не существует")
+    print(f"Количество записей: {len(data)}")
 
 
 def print_help():
