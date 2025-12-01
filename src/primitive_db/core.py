@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import os
-from functools import reduce
 
 import src.primitive_db.constant as const
 import src.primitive_db.utils as u
@@ -133,8 +132,11 @@ def insert(metadata, table_name, values):
     def maxFunc(x, y):
         return x if x > y else y
     
-    id = reduce(lambda x, y: maxFunc(x[const.ID_COLUMN], y[const.ID_COLUMN]), data) + 1 
-    postprocess_data[const.ID_COLUMN] = id 
+    max_id = 0
+    if len(data) != 0:
+       max_id = max(data, key=lambda x: x[const.ID_COLUMN])[const.ID_COLUMN] + 1
+    
+    postprocess_data[const.ID_COLUMN] = max_id 
     
     for column_number in range(1, len(metadata[table_name])):
         column = metadata[table_name][column_number]
@@ -150,7 +152,7 @@ def insert(metadata, table_name, values):
     data.append(postprocess_data)
         
     u.save_table_data(table_name, data)
-    return id
+    return max_id
 
 def select(table_data, where_clause=None):    
     if where_clause is None:
