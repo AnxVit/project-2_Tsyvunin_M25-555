@@ -99,3 +99,5 @@
 Столбцы: ID:int, name:str, age:int, is_active:bool
 Количество записей: 0 
 ```
+## Пример работы CRUD-операций
+[![asciicast](https://asciinema.org/a/aSlg6OvqgXiOqB0nizLaYr5fk)](https://asciinema.org/a/aSlg6OvqgXiOqB0nizLaYr5fk)
