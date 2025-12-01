@@ -177,7 +177,6 @@ def update(table_data, set_clause, where_clause):
             table_data.remove(data)
             data[set_column] = set_value
             table_data.append(data)
-            print(data)
             res.append(data[const.ID_COLUMN])
 
     return table_data, res
