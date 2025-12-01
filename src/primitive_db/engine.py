@@ -54,13 +54,17 @@ def run():
                 case const.COMMAND_SELECT:
                     where_clause = parse.parse_where_set(args[3:])
                     table_name = args[2]
-                    table_data = u.load_table_data(table_name)
+                    table_data, ok = u.load_table_data(table_name)
+                    if not ok:
+                        raise FileNotFoundError("Такой таблицы не существует")
                     res = core.select(table_data, where_clause)
                     print_table_rows(metadata, table_name, res)
                 case const.COMMAND_UPDATE:
                     set_clause, where_clause = parse.parse_where_set(args[2:])
                     table_name = args[1]
-                    table_data = u.load_table_data(table_name)
+                    table_data, ok = u.load_table_data(table_name)
+                    if not ok:
+                        raise FileNotFoundError("Такой таблицы не существует")
                     table_data, ids = core.update(table_data, set_clause, where_clause)
                     str_ids = ', '.join(list(map(str, ids)))
                     print(
@@ -71,7 +75,9 @@ def run():
                 case const.COMMAND_DELETE:
                     where_clause = parse.parse_where_set(args[3:])
                     table_name = args[2]
-                    table_data = u.load_table_data(table_name)
+                    table_data, ok = u.load_table_data(table_name)
+                    if not ok:
+                        raise FileNotFoundError("Такой таблицы не существует")
                     table_data, ids = core.delete(table_data, where_clause)
                     str_ids = ', '.join(list(map(str, ids)))
                     print(

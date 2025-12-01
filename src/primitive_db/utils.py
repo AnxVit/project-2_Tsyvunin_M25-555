@@ -48,10 +48,9 @@ def load_table_data(table_name):
         path = const.DATA_DIR + table_name + const.EXTENSION_TABLE
         with open(path, 'r', encoding='utf-8') as file:
             data = json.load(file)
-            return data[table_name]
+            return data[table_name], True
     except FileNotFoundError:
-        print("Таблица не найдена. Создается новая...")
-        return []
+        return [], False
 
 def save_table_data(table_name, data):
     path = const.DATA_DIR + table_name + const.EXTENSION_TABLE

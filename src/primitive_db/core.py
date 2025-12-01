@@ -128,7 +128,7 @@ def insert(metadata, table_name, values):
         raise ValueError("Недостаточное кол-во значений")
     
     postprocess_data = {}
-    data = u.load_table_data(table_name)
+    data, _ = u.load_table_data(table_name)
 
     def maxFunc(x, y):
         return x if x > y else y
