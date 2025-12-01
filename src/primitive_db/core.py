@@ -172,14 +172,14 @@ def update(table_data, set_clause, where_clause):
     set_column, set_value = get_clause(set_clause)
 
     res = []
+    postprocess_data = []
     for data in table_data:
         if data[where_column] == where_value:
-            table_data.remove(data)
             data[set_column] = set_value
-            table_data.append(data)
             res.append(data[const.ID_COLUMN])
+        postprocess_data.append(data)
 
-    return table_data, res
+    return postprocess_data, res
 
 def delete(table_data, where_clause):
     if not isinstance(where_clause, dict):
@@ -188,12 +188,13 @@ def delete(table_data, where_clause):
     where_column, where_value = get_clause(where_clause)
 
     res = []
+    postprocess_data = []
     for data in table_data:
         if data[where_column] == where_value:
-            table_data.remove(data)
             res.append(data[const.ID_COLUMN])
-
-    return table_data, res
+        else:
+            postprocess_data.append(data)
+    return postprocess_data, res
 
 def get_clause(clause):
     column = list(clause.keys())[0]
