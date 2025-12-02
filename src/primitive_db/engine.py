@@ -7,95 +7,82 @@ from prettytable import PrettyTable
 
 import src.primitive_db.constant as const
 import src.primitive_db.core as core
+import src.primitive_db.decorators as dec
 import src.primitive_db.parser as parse
 import src.primitive_db.utils as u
 
 
+@dec.handle_db_errors
 def run():
     '''The main cycle of processing and running commands'''
     print_help()
 
     while True:
-        try:
-            metadata = u.load_metadata(const.DATABASE_METADATA)
-            user_input = enter_command()
-            args = shlex.split(user_input)
-        except Exception as e:
-            print(f"Неожиданная ошибка при чтении/получении данных: {e}")
-            return
-        try:
-            u.validate_commands(args)
-            command = args[0]
+        metadata = u.load_metadata(const.DATABASE_METADATA)
+        user_input = enter_command()
+        args = shlex.split(user_input)
+        u.validate_commands(args)
+        command = args[0]
 
-            match command:
-                case const.COMMAND_CREATE:
-                    metadata = core.create_table(metadata, args[1], args[2:])
-                    columns = ', '.join(metadata[args[1]])
-                    print(f'Таблица {args[1]} успешно создана со столбцами: {columns}')
-                case const.COMMAND_DROP:
-                    metadata = core.drop_table(metadata, args[1])
-                    print(f"Таблица {args[1]} успешно удалена.")
-                case const.COMMAND_LIST:             
-                    tables = core.list_tables(metadata)
-                    print_tables(tables)
-                case const.COMMAND_EXIT:
-                    return
-                case const.COMMAND_HELP:
-                    print_help()
-                case const.COMMAND_INSERT:
-                    tab_name = args[2]
-                    values_str = ''.join(args[4:])
-                    values_list_str = values_str[1:-1].split(',')
-                    values = list(map(parse.parse_str_to_valid_type, values_list_str))
-                    id = core.insert(metadata, tab_name, values)
-                    print(
-                        f"Запись с ID={id} успешно добавлена в таблицу \"{tab_name}\"."
-                    )
-                case const.COMMAND_SELECT:
-                    where_clause = parse.parse_where_set(args[3:])
-                    table_name = args[2]
-                    table_data, ok = u.load_table_data(table_name)
-                    if not ok:
-                        raise FileNotFoundError("Такой таблицы не существует")
-                    res = core.select(table_data, where_clause)
-                    print_table_rows(metadata, table_name, res)
-                case const.COMMAND_UPDATE:
-                    set_clause, where_clause = parse.parse_where_set(args[2:])
-                    table_name = args[1]
-                    table_data, ok = u.load_table_data(table_name)
-                    if not ok:
-                        raise FileNotFoundError("Такой таблицы не существует")
-                    table_data, ids = core.update(table_data, set_clause, where_clause)
-                    str_ids = ', '.join(list(map(str, ids)))
-                    print(
-                        f"Запись(и) с ID={str_ids} " \
-                        f"в таблице {table_name} успешно обновлена(ы)"
-                    )
-                    u.save_table_data(table_name, table_data)
-                case const.COMMAND_DELETE:
-                    where_clause = parse.parse_where_set(args[3:])
-                    table_name = args[2]
-                    table_data, ok = u.load_table_data(table_name)
-                    if not ok:
-                        raise FileNotFoundError("Такой таблицы не существует")
-                    table_data, ids = core.delete(table_data, where_clause)
-                    str_ids = ', '.join(list(map(str, ids)))
-                    print(
-                        f"Запись(и) с ID={str_ids} " \
-                        f"успешно удалена(ы) из таблицы {table_name}."
-                    )
-                    u.save_table_data(table_name, table_data)
-                case const.COMMAND_INFO:
-                    table_name = args[1]
-                    print_info(metadata, table_name)
-                case _:
-                    raise ValueError(f"Функции {command} нет. Попробуйте снова.")
+        match command:
+            case const.COMMAND_CREATE:
+                metadata = core.create_table(metadata, args[1], args[2:])
+                columns = ', '.join(metadata[args[1]])
+                print(f'Таблица {args[1]} успешно создана со столбцами: {columns}')
+            case const.COMMAND_DROP:
+                metadata = core.drop_table(metadata, args[1])
+                print(f"Таблица {args[1]} успешно удалена.")
+            case const.COMMAND_LIST:             
+                tables = core.list_tables(metadata)
+                print_tables(tables)
+            case const.COMMAND_EXIT:
+                return
+            case const.COMMAND_HELP:
+                print_help()
+            case const.COMMAND_INSERT:
+                tab_name = args[2]
+                values_str = ''.join(args[4:])
+                values_list_str = values_str[1:-1].split(',')
+                values = list(map(parse.parse_str_to_valid_type, values_list_str))
+                id = core.insert(metadata, tab_name, values)
+                print(
+                    f"Запись с ID={id} успешно добавлена в таблицу \"{tab_name}\"."
+                )
+            case const.COMMAND_SELECT:
+                where_clause = parse.parse_where_set(args[3:])
+                table_name = args[2]
+                table_data = u.load_table_data(table_name)
+                res = core.select(table_data, where_clause)
+                print_table_rows(metadata, table_name, res)
+            case const.COMMAND_UPDATE:
+                set_clause, where_clause = parse.parse_where_set(args[2:])
+                table_name = args[1]
+                table_data = u.load_table_data(table_name)[table_name]
+                table_data, ids = core.update(table_data, set_clause, where_clause)
+                str_ids = ', '.join(list(map(str, ids)))
+                print(
+                    f"Запись(и) с ID={str_ids} " \
+                    f"в таблице {table_name} успешно обновлена(ы)"
+                )
+                u.save_table_data(table_name, table_data)
+            case const.COMMAND_DELETE:
+                where_clause = parse.parse_where_set(args[3:])
+                table_name = args[2]
+                table_data = u.load_table_data(table_name)[table_name]
+                table_data, ids = core.delete(table_data, where_clause)
+                str_ids = ', '.join(list(map(str, ids)))
+                print(
+                    f"Запись(и) с ID={str_ids} " \
+                    f"успешно удалена(ы) из таблицы {table_name}."
+                )
+                u.save_table_data(table_name, table_data)
+            case const.COMMAND_INFO:
+                table_name = args[1]
+                print_info(metadata, table_name)
+            case _:
+                raise ValueError(f"Функции {command} нет. Попробуйте снова.")
 
-            u.save_metadata(const.DATABASE_METADATA, metadata)
-        except (ValueError, TypeError) as e:
-            print(f"Ошибка ввода: {e}")
-        except Exception as e:
-            print(f"Неожиданная ошибка при обработке команд: {e}")
+        u.save_metadata(const.DATABASE_METADATA, metadata)
 
 def enter_command():
     '''
@@ -170,9 +157,7 @@ def print_info(metadata, table_name):
     '''
     print(f"Таблица: {table_name}")
     print(f"Столбцы: {', '.join(metadata[table_name])}")
-    data, ok = u.load_table_data(table_name)
-    if not ok:
-        raise FileNotFoundError("Такой таблицы не существует")
+    data = u.load_table_data(table_name)
     print(f"Количество записей: {len(data)}")
 
 

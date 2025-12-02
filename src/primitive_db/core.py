@@ -3,6 +3,7 @@
 import os
 
 import src.primitive_db.constant as const
+import src.primitive_db.decorators as dec
 import src.primitive_db.utils as u
 
 
@@ -60,8 +61,8 @@ def create_table(metadata, table_name, columns):
     metadata[table_name] = columns_meta
 
     return metadata
-        
 
+@dec.confirm_action("удаление таблицы")
 def drop_table(metadata, table_name):
     '''
     Drop existing table
@@ -110,6 +111,7 @@ def list_tables(metadata):
     
     return list(metadata.keys())
 
+@dec.log_time
 def insert(metadata, table_name, values):
     '''
     Insert values to the table
@@ -170,6 +172,9 @@ def insert(metadata, table_name, values):
     u.save_table_data(table_name, data)
     return max_id
 
+cacher = dec.create_cacher()
+
+@dec.log_time
 def select(table_data, where_clause=None):
     '''
     Select values to the table
@@ -193,11 +198,17 @@ def select(table_data, where_clause=None):
 
     where_column, where_value = get_clause(where_clause)
 
-    res = []
-    for data in table_data:
-        if data[where_column] == where_value:
-            res.append(data)
-    return res
+    table_name, rows = next(iter(table_data.items()))
+
+    def get_result():
+        res = []
+        for row in rows:
+            if row[where_column] == where_value:
+                res.append(row)
+        return res
+
+    key = table_name + ':' + where_column + ':'+ str(where_value)
+    return cacher(key, get_result)
 
 def update(table_data, set_clause, where_clause):
     '''
@@ -236,6 +247,7 @@ def update(table_data, set_clause, where_clause):
 
     return postprocess_data, res
 
+@dec.confirm_action("удаление строк")
 def delete(table_data, where_clause):
     '''
     Delete values from the table by condition

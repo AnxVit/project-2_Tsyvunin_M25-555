@@ -28,3 +28,5 @@ MAP_TYPES = {
 
 TRUE_VALUES = ["True", "true"]
 FALSE_VALUES = ["False", "false"]
+
+CACHE_TTL = 10.0

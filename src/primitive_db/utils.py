@@ -18,13 +18,9 @@ def load_metadata(filepath):
     dict
         metadata of tables from file
     '''
-    try:
-        with open(filepath, 'r', encoding='utf-8') as file:
-            data = json.load(file)
-            return data
-    except FileNotFoundError:
-        print("База данных не найдена. Создается новая...")
-        return {}
+    with open(filepath, 'r', encoding='utf-8') as file:
+        data = json.load(file)
+        return data
 
 def save_metadata(filepath, data):
     '''
@@ -58,13 +54,10 @@ def load_table_data(table_name):
     bool
         is exist table
     '''
-    try:
-        path = const.DATA_DIR + table_name + const.EXTENSION_TABLE
-        with open(path, 'r', encoding='utf-8') as file:
-            data = json.load(file)
-            return data[table_name], True
-    except FileNotFoundError:
-        return [], False
+    path = const.DATA_DIR + table_name + const.EXTENSION_TABLE
+    with open(path, 'r', encoding='utf-8') as file:
+        data = json.load(file)
+        return data
 
 def save_table_data(table_name, data):
     '''
@@ -84,7 +77,7 @@ def save_table_data(table_name, data):
     with open(path, 'w', encoding='utf-8') as file:
         json.dump(full_data, file)
 
-def validate_commands(args):
+def validate_commands(args, metadata):
     """Validation of user commands"""
     command = args[0]
     match command:
@@ -123,6 +116,8 @@ def validate_commands(args):
                  raise ValueError(
                     "Неправильный формат: insert into <table> values (...)"
                 )
+            if args[2] not in metadata:
+                raise KeyError("Такой таблицы не существует")
         case const.COMMAND_SELECT:
             if len(args) not in [3, 7]:
                 raise ValueError(
@@ -140,6 +135,8 @@ def validate_commands(args):
                         "Неправильный формат: " \
                         "select from <table> (where <column> = <value>)"
                     )
+            if args[2] not in metadata:
+                raise KeyError("Такой таблицы не существует")
         case const.COMMAND_DELETE:
             if len(args) != 7:
                 raise ValueError(
@@ -151,6 +148,8 @@ def validate_commands(args):
                     "Неправильный формат: " \
                     "delete from <table> where <column> = <value>"
                 )
+            if args[2] not in metadata:
+                raise KeyError("Такой таблицы не существует")
         case const.COMMAND_UPDATE:
             if len(args) != 10:
                 raise ValueError(
@@ -167,8 +166,12 @@ def validate_commands(args):
                     "Неправильный формат: " \
                     "update <table> set <column> = <value> where <column> = <value>"
                 )
+            if args[1] not in metadata:
+                raise KeyError("Такой таблицы не существует")
         case const.COMMAND_INFO:
             if len(args) != 2:
                 raise ValueError(
                     "Неправильный формат: info <table>"
                 )
+            if args[1] not in metadata:
+                raise KeyError("Такой таблицы не существует")
