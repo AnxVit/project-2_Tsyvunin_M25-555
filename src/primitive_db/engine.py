@@ -12,7 +12,6 @@ import src.primitive_db.parser as parse
 import src.primitive_db.utils as u
 
 
-@dec.handle_db_errors
 def run():
     '''The main cycle of processing and running commands'''
     print_help()
@@ -21,68 +20,304 @@ def run():
         metadata = u.load_metadata(const.DATABASE_METADATA)
         user_input = enter_command()
         args = shlex.split(user_input)
-        u.validate_commands(args)
         command = args[0]
 
         match command:
             case const.COMMAND_CREATE:
-                metadata = core.create_table(metadata, args[1], args[2:])
-                columns = ', '.join(metadata[args[1]])
-                print(f'Таблица {args[1]} успешно создана со столбцами: {columns}')
+                handle_create(args, metadata)
             case const.COMMAND_DROP:
-                metadata = core.drop_table(metadata, args[1])
-                print(f"Таблица {args[1]} успешно удалена.")
-            case const.COMMAND_LIST:             
-                tables = core.list_tables(metadata)
-                print_tables(tables)
+                handle_drop(args, metadata)
+            case const.COMMAND_LIST:      
+                handle_list(args, metadata)
             case const.COMMAND_EXIT:
                 return
             case const.COMMAND_HELP:
                 print_help()
             case const.COMMAND_INSERT:
-                tab_name = args[2]
-                values_str = ''.join(args[4:])
-                values_list_str = values_str[1:-1].split(',')
-                values = list(map(parse.parse_str_to_valid_type, values_list_str))
-                id = core.insert(metadata, tab_name, values)
-                print(
-                    f"Запись с ID={id} успешно добавлена в таблицу \"{tab_name}\"."
-                )
+                handle_insert(args, metadata)
             case const.COMMAND_SELECT:
-                where_clause = parse.parse_where_set(args[3:])
-                table_name = args[2]
-                table_data = u.load_table_data(table_name)
-                res = core.select(table_data, where_clause)
-                print_table_rows(metadata, table_name, res)
+                handle_select(args, metadata)
             case const.COMMAND_UPDATE:
-                set_clause, where_clause = parse.parse_where_set(args[2:])
-                table_name = args[1]
-                table_data = u.load_table_data(table_name)[table_name]
-                table_data, ids = core.update(table_data, set_clause, where_clause)
-                str_ids = ', '.join(list(map(str, ids)))
-                print(
-                    f"Запись(и) с ID={str_ids} " \
-                    f"в таблице {table_name} успешно обновлена(ы)"
-                )
-                u.save_table_data(table_name, table_data)
+                handle_update(args, metadata)
             case const.COMMAND_DELETE:
-                where_clause = parse.parse_where_set(args[3:])
-                table_name = args[2]
-                table_data = u.load_table_data(table_name)[table_name]
-                table_data, ids = core.delete(table_data, where_clause)
-                str_ids = ', '.join(list(map(str, ids)))
-                print(
-                    f"Запись(и) с ID={str_ids} " \
-                    f"успешно удалена(ы) из таблицы {table_name}."
-                )
-                u.save_table_data(table_name, table_data)
+                handle_delete(args, metadata)
             case const.COMMAND_INFO:
-                table_name = args[1]
-                print_info(metadata, table_name)
+                handle_info(args, metadata)
             case _:
-                raise ValueError(f"Функции {command} нет. Попробуйте снова.")
+                print(f"Функции {command} нет. Попробуйте снова.")
 
-        u.save_metadata(const.DATABASE_METADATA, metadata)
+@dec.handle_db_errors
+def handle_create(args, metadata):
+    '''
+    Create handler
+    Validation, create meta info and table
+    Parameters
+    ----------
+    args: list[str]
+        info about existing tables
+    metadata: dict
+        info about existing tables
+
+    Returns
+    -------
+    None
+    '''
+    if len(args) < 2:
+        raise ValueError(
+            "Некорректное значение: <table_name>. Попробуйте снова."
+        )
+    metadata = core.create_table(metadata, args[1], args[2:])
+    columns = ', '.join(metadata[args[1]])
+    u.save_metadata(const.DATABASE_METADATA, metadata)
+    print(f'Таблица {args[1]} успешно создана со столбцами: {columns}')
+
+@dec.handle_db_errors
+def handle_drop(args, metadata):
+    '''
+    Drop handler
+    Validation, delete meta info and table
+    Parameters
+    ----------
+    args: list[str]
+        info about existing tables
+    metadata: dict
+        info about existing tables
+
+    Returns
+    -------
+    None
+    '''
+    if len(args) != 2:
+        if len(args) == 1:
+            raise ValueError(
+                "Некорректное значение: <table_name>. Попробуйте снова."
+            )
+        else:
+            raise ValueError(
+                f"Некорректное значение: {args[2:]}. Попробуйте снова."
+            )
+    metadata = core.drop_table(metadata, args[1])
+    u.save_metadata(const.DATABASE_METADATA, metadata)
+    print(f"Таблица {args[1]} успешно удалена.")
+
+@dec.handle_db_errors
+def handle_list(args, metadata):
+    '''
+    List handler
+    Validation, print name of tables
+    Parameters
+    ----------
+    args: list[str]
+        info about existing tables
+    metadata: dict
+        info about existing tables
+
+    Returns
+    -------
+    None
+    '''
+    if len(args) != 1:
+        raise ValueError(
+            f"Некорректное значение: {args[1:]}. Попробуйте снова."
+        )
+    tables = core.list_tables(metadata)
+    print_tables(tables)
+
+@dec.handle_db_errors
+def handle_insert(args, metadata):
+    '''
+    Insert handler
+    Validation, type mapping, insert row in table
+    Parameters
+    ----------
+    args: list[str]
+        info about existing tables
+    metadata: dict
+        info about existing tables
+
+    Returns
+    -------
+    None
+    '''
+    if len(args) > 3:
+        if args[1] != "into" or args[3] != "values":
+                raise ValueError(
+                    "Неправильный формат: insert into <table> values (...)"
+                )
+    if len(args) < 5:
+        raise ValueError(
+            "Неправильный формат: insert into <table> values (...)"
+        )
+    values = ''.join(args[4:])
+    if values[0] != '(' or values[-1] != ")":
+            raise ValueError(
+            "Неправильный формат: insert into <table> values (...)"
+        )
+    if args[2] not in metadata:
+        raise KeyError("Такой таблицы не существует")
+    
+    table_name = args[2]
+    values_str = ''.join(args[4:])
+    values_list_str = values_str[1:-1].split(',')
+    values = list(map(parse.parse_str_to_valid_type, values_list_str))
+    id = core.insert(metadata, table_name, values)
+    print(
+        f"Запись с ID={id} успешно добавлена в таблицу \"{table_name}\"."
+    )
+
+@dec.handle_db_errors
+def handle_select(args, metadata):
+    '''
+    Select handler
+    Validation, parse where clause, print pretty table
+    Cache using
+    Parameters
+    ----------
+    args: list[str]
+        info about existing tables
+    metadata: dict
+        info about existing tables
+
+    Returns
+    -------
+    None
+    '''
+    if len(args) not in [3, 7]:
+        raise ValueError(
+            "Неправильный формат: " \
+            "select from <table> (where <column> = <value>)"
+        )
+    if args[1] != "from":
+        raise ValueError(
+            "Неправильный формат: " \
+            "select from <table> (where <column> = <value>)"
+        )
+    if len(args) > 3:
+        if args[3] != "where" or args[5] != "=":
+            raise ValueError(
+                "Неправильный формат: " \
+                "select from <table> (where <column> = <value>)"
+            )
+    if args[2] not in metadata:
+        raise KeyError("Такой таблицы не существует")
+    
+    where_clause = parse.parse_where_set(args[3:])
+    table_name = args[2]
+    table_data = u.load_table_data(table_name)
+    res = core.select(table_data, where_clause)
+    print_table_rows(metadata, table_name, res)
+
+@dec.handle_db_errors
+def handle_update(args, metadata):
+    '''
+    Update handler
+    Validation, parse where/set clause, update value by condition
+    Print ids of changed rows
+    Parameters
+    ----------
+    args: list[str]
+        info about existing tables
+    metadata: dict
+        info about existing tables
+
+    Returns
+    -------
+    None
+    '''
+    if len(args) != 10:
+        raise ValueError(
+            "Неправильный формат: " \
+            "update <table> set <column> = <value> where <column> = <value>"
+        )
+    if args[2] != "set" or args[6] != "where":
+        raise ValueError(
+            "Неправильный формат: " \
+            "update <table> set <column> = <value> where <column> = <value>"
+        )
+    if args[4] != "=" or args[8] != "=":
+        raise ValueError(
+            "Неправильный формат: " \
+            "update <table> set <column> = <value> where <column> = <value>"
+        )
+    if args[1] not in metadata:
+        raise KeyError("Такой таблицы не существует")
+    
+    set_clause, where_clause = parse.parse_where_set(args[2:])
+    table_name = args[1]
+    table_data = u.load_table_data(table_name)[table_name]
+    table_data, ids = core.update(table_data, set_clause, where_clause)
+    str_ids = ', '.join(list(map(str, ids)))
+    u.save_table_data(table_name, table_data)
+    print(
+        f"Запись(и) с ID={str_ids} " \
+        f"в таблице {table_name} успешно обновлена(ы)"
+    )
+
+@dec.handle_db_errors
+def handle_delete(args, metadata):
+    '''
+    Update handler
+    Validation, parse where clause, delete value by condition
+    Print ids of deleted rows
+    Parameters
+    ----------
+    args: list[str]
+        info about existing tables
+    metadata: dict
+        info about existing tables
+
+    Returns
+    -------
+    None
+    '''
+    if len(args) != 7:
+        raise ValueError(
+            "Неправильный формат: " \
+            "delete from <table> where <column> = <value>"
+        )
+    if args[1] != "from" or args[3] != "where" or args[5] != "=":
+        raise ValueError(
+            "Неправильный формат: " \
+            "delete from <table> where <column> = <value>"
+        )
+    if args[2] not in metadata:
+        raise KeyError("Такой таблицы не существует")
+    
+    where_clause = parse.parse_where_set(args[3:])
+    table_name = args[2]
+    table_data = u.load_table_data(table_name)[table_name]
+    table_data, ids = core.delete(table_data, where_clause)
+    str_ids = ', '.join(list(map(str, ids)))
+    u.save_table_data(table_name, table_data)
+    print(
+        f"Запись(и) с ID={str_ids} " \
+        f"успешно удалена(ы) из таблицы {table_name}."
+    )
+
+@dec.handle_db_errors
+def handle_info(args, metadata):
+    '''
+    Info handler
+    Validation, print table info
+    Parameters
+    ----------
+    args: list[str]
+        info about existing tables
+    metadata: dict
+        info about existing tables
+
+    Returns
+    -------
+    None
+    '''
+    if len(args) != 2:
+        raise ValueError(
+            "Неправильный формат: info <table>"
+        )
+    if args[1] not in metadata:
+        raise KeyError("Такой таблицы не существует")
+    table_name = args[1]
+    print_info(metadata, table_name)
 
 def enter_command():
     '''

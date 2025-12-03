@@ -101,3 +101,41 @@
 ```
 ## Пример работы CRUD-операций
 [![asciicast](https://asciinema.org/a/aSlg6OvqgXiOqB0nizLaYr5fk)](https://asciinema.org/a/aSlg6OvqgXiOqB0nizLaYr5fk)
+
+# Декораторы
+## confirm_action
+> drop_table, delete 
+```
+Введите команду: delete from users where id = 0
+
+Вы уверены, что хотите выполнить "удаление строк"? [y/n]:y
+Запись(и) с ID=0 успешно удалена(ы) из таблицы users.
+```
+## log_time
+> select, insert 
+```
+Введите команду: select from users where id = 0
+
+Функция select выполнилась за 1.955e-04 секунд
++----+------+
+| ID | name |
++----+------+
+| 0  | John |
++----+------+
+```
+# Cache
+> select
+```
+Введите команду: select from users where id = 0
+
+(*Использовался кэш*)
+Функция select выполнилась за 7.250e-05 секунд
++----+------+
+| ID | name |
++----+------+
+| 0  | John |
++----+------+
+```
+
+# Пример работы
+[![asciicast](https://asciinema.org/a/83bT2nCIk54LdfeTKAJ7Qz2sT)](https://asciinema.org/a/83bT2nCIk54LdfeTKAJ7Qz2sT)

@@ -60,6 +60,8 @@ def create_table(metadata, table_name, columns):
 
     metadata[table_name] = columns_meta
 
+    u.save_table_data(table_name, [])
+
     return metadata
 
 @dec.confirm_action("удаление таблицы")
@@ -85,7 +87,7 @@ def drop_table(metadata, table_name):
         raise TypeError("Неверный тип имени таблицы")
 
     if table_name not in metadata:
-        raise ValueError(f"Таблицы {table_name} не существует")
+        raise KeyError(f"Таблицы {table_name} не существует")
     
     del metadata[table_name]
 
@@ -139,16 +141,13 @@ def insert(metadata, table_name, values):
         raise TypeError("Неверный тип для строки значений")
     
     if table_name not in metadata:
-        raise ValueError(f"Таблицы {table_name} не существует")
+        raise KeyError(f"Таблицы {table_name} не существует")
     
     if len(metadata[table_name]) - 1 != len(values):
         raise ValueError("Недостаточное кол-во значений")
     
     postprocess_data = {}
-    data, _ = u.load_table_data(table_name)
-
-    def maxFunc(x, y):
-        return x if x > y else y
+    data = u.load_table_data(table_name)[table_name]
     
     max_id = 0
     if len(data) != 0:
@@ -190,15 +189,15 @@ def select(table_data, where_clause=None):
     list[dict]
         selected rows
     ''' 
+    table_name, rows = next(iter(table_data.items()))
+    
     if where_clause is None:
-        return table_data
+        return rows
     
     if not isinstance(where_clause, dict):
         raise ValueError("Неверный тип условия")
 
     where_column, where_value = get_clause(where_clause)
-
-    table_name, rows = next(iter(table_data.items()))
 
     def get_result():
         res = []

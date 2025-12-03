@@ -11,12 +11,12 @@ def handle_db_errors(func):
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except KeyError:
+        except KeyError as e:
             print(f"Ошибка: Таблица или столбец {e} не найден.")
-        except ValueError | TypeError as e:
+        except (ValueError, TypeError) as e:
             print(f"Ошибка валидации типа/переменной: {e}")
-        except FileExistsError:
-            print("Ошибка: Файл данных не найден. Возможно, база данных не инициализирована.")
+        except FileNotFoundError:
+            return {}
         except Exception as e:
             print(f"Неожиданная ошибка: {e}")
     return wrapper
@@ -40,9 +40,10 @@ def log_time(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         start = time.monotonic()
-        func(*args, **kwargs)
+        value = func(*args, **kwargs)
         end = time.monotonic()
-        print(f"Функция {func.__name__} выполнилась за {end - start} секунд")
+        print(f"Функция {func.__name__} выполнилась за {(end - start):.3e} секунд")
+        return value
     return wrapper
 
 def create_cacher():
