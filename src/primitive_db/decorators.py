@@ -7,6 +7,9 @@ import src.primitive_db.constant as const
 
 
 def handle_db_errors(func):
+    '''
+    Handle errors
+    '''
     @wraps(func)
     def wrapper(*args, **kwargs):
         try:
@@ -22,6 +25,7 @@ def handle_db_errors(func):
     return wrapper
 
 def confirm_action(action_name):
+    '''Confirm user action'''
     def real_decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -37,6 +41,7 @@ def confirm_action(action_name):
     return real_decorator
 
 def log_time(func):
+    '''Print execution time'''
     @wraps(func)
     def wrapper(*args, **kwargs):
         start = time.monotonic()
@@ -47,6 +52,7 @@ def log_time(func):
     return wrapper
 
 def create_cacher():
+    '''Create cache function'''
     cache = {}
     def cache_result(key, value_func):
         if key in cache:
